@@ -1,6 +1,3 @@
-/node_modules
-/target
-chrome-trace.json
 .direnv/
 result
-/certs
+/dev-profile*

@@ -11,15 +11,36 @@
         nushell = import ./nushell.nix {
           inherit pkgs;
         };
-      in
-      {
+        push-cachix = pkgs.writeShellScriptBin "push-cachix" ''
+          set -euo pipefail
+          if [ -z ''${CACHIX_AUTH_TOKEN:-} ]; then echo "CACHIX_AUTH_TOKEN env var missing"; exit 1; fi
+          echo $CACHIX_AUTH_TOKEN
+          # https://docs.cachix.org/pushing
+          nix flake archive --json \
+            | ${pkgs.jq}/bin/jq -r '.path,(.inputs|to_entries[].value.path)' \
+            | ${pkgs.cachix}/bin/cachix push jvgpkgs
+          nix build '.#packages.${system}.all' --json \
+            | ${pkgs.jq}/bin/jq -r '.[].outputs | to_entries[].value' \
+            | ${pkgs.cachix}/bin/cachix push jvgpkgs
+          nix develop --profile dev-profile -c true
+          cachix push jvgpkgs dev-profile
+        '';
+      in rec {
         packages = {
           inherit nushell;
+          all = pkgs.symlinkJoin {
+            name = "jvgpkgs-all";
+            paths = [ nushell ];
+          };
         };
         # Format with `nix fmt .`
         formatter = pkgs.nixpkgs-fmt;
         devShell = pkgs.mkShell {
-          packages = [ self.formatter.${system} ];
+          packages = [
+            pkgs.cachix
+            formatter
+            push-cachix
+          ];
         };
       }
     );
