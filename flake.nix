@@ -11,6 +11,9 @@
         nushell = import ./nushell.nix {
           inherit pkgs;
         };
+        transformimgs = import ./transformimgs.nix {
+          inherit pkgs;
+        };
         push-cachix = pkgs.writeShellScriptBin "push-cachix" ''
           set -euo pipefail
           if [ -z ''${CACHIX_AUTH_TOKEN:-} ]; then echo "CACHIX_AUTH_TOKEN env var missing"; exit 1; fi
@@ -25,13 +28,15 @@
           nix develop --profile dev-profile -c true
           cachix push jvgpkgs dev-profile
         '';
-      in rec {
+      in
+      rec {
         packages = {
-          inherit nushell;
+          inherit nushell transformimgs;
           all = pkgs.symlinkJoin {
             name = "jvgpkgs-all";
-            paths = [ nushell ];
+            paths = [ nushell transformimgs ];
           };
+          default = packages.all;
         };
         # Format with `nix fmt .`
         formatter = pkgs.nixpkgs-fmt;
