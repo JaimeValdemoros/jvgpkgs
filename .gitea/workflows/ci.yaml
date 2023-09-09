@@ -11,9 +11,11 @@ jobs:
         run: |
           echo ${{ gitea.workspace }}
           ls ${{ gitea.workspace }}
-      - name: Build
+      - name: Format
         run: |
           nix fmt && git diff --exit-code
+      - name: Build
+        run: |
           nix build '.#packages.x86_64-linux.all'
       - name: Push
         env:
