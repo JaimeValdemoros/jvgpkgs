@@ -47,6 +47,9 @@
             push-cachix
           ];
         };
+        devShells.ci = pkgs.mkShell {
+          packages = [ pkgs.cachix push-cachix ];
+        };
       }
     );
 }
