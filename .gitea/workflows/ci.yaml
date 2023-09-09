@@ -11,6 +11,10 @@ jobs:
         run: |
           echo ${{ gitea.workspace }}
           ls ${{ gitea.workspace }}
+      - name: Fmt
+        run: |
+          nix fmt
+          git diff --exit-code
       - name: Build
         shell: nix develop '.#ci' --command bash -eo pipefail {0}
         run: |
